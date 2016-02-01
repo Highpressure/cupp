@@ -1,8 +1,25 @@
+############# CURRENTLY JUST A BACKUP 
+############# NOT WORKING DUE TO LITS / DICT PROBLEM WITH TUPLE AND STRING
+############# MANY IMPROVEMENTS AND FIXINGS TO LAST VERSION
+############# PROGRESS IN WORK
+
+
+############ HELP ME IF YOU`d LIKE :)
+
+
+
+
+
+
+
+
+
+
 #!/usr/bin/python
 #
 #  [Program]
 #
-#  CUPP 3.0
+#  CUPP 3.1
 #  Common User Passwords Profiler
 #
 #
@@ -14,7 +31,10 @@
 #  http://www.remote-exploit.org
 #  http://www.azuzi.me
 #
+#  [Editor of 3.1]
 #
+#	Christian Schwendemann
+#	Arrow ECS Internet Security AG
 #
 #  [License]
 #
@@ -41,14 +61,33 @@ import ConfigParser
 import urllib
 import gzip
 import csv
+import itertools # ATTENTION! REQUIRES PYTHON 2.6 OR HIGHER !!!!!!!!!!! Used for better mixing of arrays
+from collections import OrderedDict
+
+pathtocfg = [''] 
+# IF CUPP IS NOT RUNNING, IT WILL BE BECAUSE OF THE MISSING CONFIG FILE. 
+# IF YOU ARE RUNNING CUPP ON WINDOWS, IT SHOULD GET THE PATH BY ITSELF
+# HOWEVER YOU CAN DEFINE THE PATH IN THE VARIABLE ABOVE. 
+# 
+# FOR WINDOWS YOU SHOULD NOT TYPE THE LAST \ (C:\cupp and not C:\cupp\)
 
 
+
+if os.name == 'nt':
+	pathtocfg = os.path.dirname(os.path.realpath(__file__))
+	pathtocfg = pathtocfg+chr(92)
+
+	
 # Reading configuration file...
 config = ConfigParser.ConfigParser()
-config.read('cupp.cfg')
+config.read(pathtocfg+'cupp.cfg')
 
-years = config.get('years', 'years').split(',')
-chars = config.get('specialchars', 'chars').split(',')
+years = []
+years.append(config.get('years', 'years').split(','))
+#years = config.get('years', 'years').split(',')
+chars = []
+chars.append(config.get('specialchars', 'chars').split(','))
+#chars = config.get('specialchars', 'chars').split(',')
 
 numfrom = config.getint('nums','from')
 numto = config.getint('nums','to')
@@ -57,7 +96,8 @@ wcfrom = config.getint('nums','wcfrom')
 wcto = config.getint('nums','wcto')
 
 threshold = config.getint('nums','threshold')
-
+unique_lista = ['']
+unique_list = ['']
 # 1337 mode configs, well you can add more lines if you add it to config file too.
 # You will need to add more lines in two places in cupp.py code as well...
 a = config.get('leet','a')
@@ -188,7 +228,6 @@ elif sys.argv[1] == '-w':
 		
 	print "\r\n[+] Now making a dictionary..."
 	
-	print "[+] Sorting list and removing duplicates..."
 	
 	komb_unique1 = dict.fromkeys(kombinacija1).keys()	
 	komb_unique2 = dict.fromkeys(kombinacija2).keys()
@@ -239,19 +278,47 @@ elif sys.argv[1] == '-w':
 
 
 
-elif sys.argv[1] == '-i':
-	print "\r\n[+] Insert the informations about the victim to make a dictionary"
-	print "[+] If you don't know all the info, just hit enter when asked! ;)\r\n"
 
+
+
+
+
+elif sys.argv[1] == '-i':
+
+	if os.name == 'nt':
+		os.system('cls') #for window
+	if os.name <>'nt':
+		os.system('clear') #for Linux
+
+
+	print "\r\n \r\n"
+	print "        +++ Welcome to CUPP 3.1 -  Common User Password Profiler +++"
+	print "\r\n"
+	print " After this introduction you will be asked for personal details of your target."
+	print " Informations you are not aware of, you can skip by just pressing Enter."
+	print " The more informations you provide, the better your resulting dictionary will get."
+	print "\r\n"
+	print " To give you a feeling about the numbers: "
+	print " Full informations on target and partner/friend of target will give you"
+	print " about 30.000 lines / combinations, if you don't set any other options."
+	print "\r\n"
+	print " The same informations, but with numbers at the end and one special character"
+	print " at the end, will already create around 60.000 entries to your resulting wordlist."
+	print "\r\n"
+	print ""
+	
 # We need some informations first!
 
+	print "Lets start with the basic informations:"
+	print "----------------------------------------"
+	print "\r\n"
 	name = raw_input("> First Name: ").lower()
 	while len(name) == 0 or name == " " or name == "  " or name == "   ":
 		print "\r\n[-] You must enter a name at least!"
 		name = raw_input("> Name: ").lower()
 	name = str(name)
 
-	surname = raw_input("> Surname: ").lower()
+	surname = raw_input("> Last Name: ").lower()
 	nick = raw_input("> Nickname: ").lower()
 	birthdate = raw_input("> Birthdate (DDMMYYYY): ")
 	while len(birthdate) != 0 and len(birthdate) != 8:
@@ -261,9 +328,9 @@ elif sys.argv[1] == '-i':
 
 	print "\r\n"
 
-	wife = raw_input("> Partners) name: ").lower()
-	wifen = raw_input("> Partners) nickname: ").lower()
-	wifeb = raw_input("> Partners) birthdate (DDMMYYYY): ")
+	wife = raw_input("> Partners First Name: ").lower()
+	wifen = raw_input("> Partners Nickname: ").lower()
+	wifeb = raw_input("> Partners Birthdate (DDMMYYYY): ")
 	while len(wifeb) != 0 and len(wifeb) != 8:
 		print "\r\n[-] You must enter 8 digits for birthday!"
 		wifeb = raw_input("> Partners birthdate (DDMMYYYY): ")
@@ -272,44 +339,142 @@ elif sys.argv[1] == '-i':
 
 	kid = raw_input("> Child's name: ").lower()
 	kidn = raw_input("> Child's nickname: ").lower()
-	kidb = raw_input("> Child's birthdate (DDMMYYYY): ")
+	kidb = raw_input("> Child's Birthdate (DDMMYYYY): ")
 	while len(kidb) != 0 and len(kidb) != 8:
 		print "\r\n[-] You must enter 8 digits for birthday!"
 		kidb = raw_input("> Child's birthdate (DDMMYYYY): ")
 	kidb = str(kidb)
 	print "\r\n"
 
+	kid2 = raw_input("> 2nd Child's name: ").lower()
+	kid2n = raw_input("> 2nd Child's nickname: ").lower()
+	kid2b = raw_input("> 2nd Child's birthdate (DDMMYYYY): ")
+	while len(kid2b) != 0 and len(kidb) != 8:
+		print "\r\n[-] You must enter 8 digits for birthday!"
+		kid2b = raw_input("> 2nd Child's birthdate (DDMMYYYY): ")
+	kid2b = str(kid2b)
+	
+# Extra Info
+	print "\r\n"
+	print "\r\n"
+	print "Now lets feed some extra informations:"
+	print "---------------------------------------"
+	print "\r\n"
+	
 	pet = raw_input("> Pet's name: ").lower()
+	licplt = raw_input("> License Plate of victims car: ").lower()
+	licplt2 = raw_input("> License Plate 2nd car: ").lower()
 	company = raw_input("> Company name: ").lower()
 	print "\r\n"
-
+	print "> Do you want to define keywords? (e.g. hobbies, town,..)" 
+	words1 = raw_input("> Keywords will be mixed with other provided details Y/[N]: ").lower()
 	words = ['']
-	words1 = raw_input("> Do you want to add some key words about the victim? Y/[N]: ").lower()
 	words2 = ""
 	if words1 == "y":
-		words2 = raw_input("> Please enter the words, separated by comma. [i.e. hacker,juice,black], spaces will be removed: ").replace(" ","")
+		words2 = raw_input("> Please enter the words, separated by comma. [i.e. tennis,canada,mets,chevy], spaces will be removed: ").replace(" ","")
 	words = words2.split(",")
-
+	print "\r\n"
+	
+# Final Adjustments
+	
+	print "Ok, lets do some tuning and adjustments for your dictionary now:"
+	print "-----------------------------------------------------------------"
+	print "\r\n"
+	
+	askreverse = raw_input("> Do you want to add reversed names? (e.g. Christian = naitsirhC) Y/[N]: ").lower()
+		
+	randnum = raw_input("> Do you want a set with numbers at the end? (e.g. Daniela22) Y/[N]: " ).lower() # see config file - default 0-100
+		
+	specharsF = ['']
+	specharsF1 = raw_input("> Do you want a set with special chars in front (e.g. !Chris) Y/[N]: ").lower()
+					
+	if specharsF1 == "y":
+		specharsF1wasno = "n"
+		howmany = raw_input("> How many special chars maximum (1-3): ")
+		while howmany > "3":
+			print "\r\n[-] You must enter a value between 1 and 3"
+			howmany = raw_input("> How many special chars maximum (1-3): ")
+		
+		for specF1 in chars:
+			specharsF.append(specF1)
+			if howmany >= "2":
+				for specF2 in chars:
+					specharsF.append(specF1+specF2)
+					if howmany == "3":
+						for specF3 in chars:
+							specharsF.append(specF1+specF2+specF3)
 	spechars = ['']
-	spechars1 = raw_input("> Do you want to add special chars at the end of words? Y/[N]: ").lower()
+	howmany = ['']
+	specharswasno = ['']
+	specharsF1wasno = ['']
+	
+	spechars1 = raw_input("> Do you want a set with special chars at the end? (e.g. Lucy!) Y/[N]: ").lower()
 	if spechars1 == "y":
+		specharswasno = "n"
+		howmany = raw_input("> How many special chars maximum (1-3): ")
+		while howmany > "3":
+			print "\r\n[-] You must enter a value between 1 and 3"
+			howmany = raw_input("> How many special chars maximum (1-3): ")
+		
 		for spec1 in chars:
 			spechars.append(spec1)
-			for spec2 in chars:
-				spechars.append(spec1+spec2)
-				for spec3 in chars:
-					spechars.append(spec1+spec2+spec3)
+			if howmany >= "2":
+				for spec2 in chars:
+					spechars.append(spec1+spec2)
+					if howmany == "3":
+						for spec3 in chars:
+							spechars.append(spec1+spec2+spec3)
+	spechars2 = ['']
+	spechars2 = raw_input("> Do you want to set special chars in the front and end (e.g. !Chevy!) Y/[N]: ").lower()
+	if spechars2 == "y":
+		if specharsF1 <> "y":
+			specharsF1wasno = "y"
+			howmany = raw_input("> How many special chars in the front maximum (1-3): ")
+			while howmany > "3":
+				print "\r\n[-] You must enter a value between 1 and 3"
+				howmany = raw_input("> How many special chars maximum (1-3): ")
+		
+			for specF1 in chars:
+				specharsF.append(specF1)
+				if howmany >= "2":
+					for specF2 in chars:
+						specharsF.append(specF1+specF2)
+						if howmany == "3":
+							for specF3 in chars:
+								specharsF.append(specF1+specF2+specF3)
+		if spechars1 <> "y":
+			specharswasno = "y"
+			howmany = raw_input("> How many special chars at the end maximum (1-3): ")
+			while howmany > "3":
+				print "\r\n[-] You must enter a value between 1 and 3"
+				howmany = raw_input("> How many special chars maximum (1-3): ")
+		
+			for spec1 in chars:
+				spechars.append(spec1)
+				if howmany >= "2":
+					for spec2 in chars:
+						spechars.append(spec1+spec2)
+						if howmany == "3":
+							for spec3 in chars:
+								spechars.append(spec1+spec2+spec3)
+	#
+	securechars = ['']	
+	securechars = raw_input("> Do you want a set extra secure 4-value combinations (e.g. Christian92Marina89)  Attention: adds up to 300.000, extra combinations depending on iputs! Y/[N]: ").lower()
+					
 
-	randnum = raw_input("> Do you want to add some random numbers at the end of words? Y/[N]").lower()
 	leetmode = raw_input("> Leet mode? (i.e. leet = 1337) Y/[N]: ").lower()
 
+	
+	
+	print "\r\n[+] Ok hold on a few seconds. Creating your dictionary.."
 
-	print "\r\n[+] Now making a dictionary..."
+
+# Now me must do some string modifications for later combination-sets
 
 
-# Now me must do some string modifications...
-
-# Birthdays first
+# Birthdays first 
+# Please note: Not all of these combinations are active in the current version.
+# If you would like to use them, take a look below, where we start to create combinations (search for bds)
 
 	birthdate_yy = birthdate[-2:]
 	birthdate_yyy = birthdate[-3:]
@@ -335,6 +500,13 @@ elif sys.argv[1] == '-i':
 	kidb_dd = kidb[:2]
 	kidb_mm = kidb[2:4]
 	
+	kid2b_yy = kid2b[-2:]
+	kid2b_yyy = kid2b[-3:]
+	kid2b_yyyy = kid2b[-4:]
+	kid2b_xd = kid2b[1:2]
+	kid2b_xm = kid2b[3:4]
+	kid2b_dd = kid2b[:2]
+	kid2b_mm = kid2b[2:4]
 	
 	# Convert first letters to uppercase...
 	
@@ -345,13 +517,33 @@ elif sys.argv[1] == '-i':
 	wifenup = wifen.title()
 	kidup = kid.title()
 	kidnup = kidn.title()
+	kid2up = kid.title()
+	kid2nup = kidn.title()
 	petup = pet.title()
 	companyup = company.title()
+	
+	
+	# Handling of the keywords, if given
 	wordsup = []
+	word = []
 	for words1 in words:
 		wordsup.append(words1.title())
 	
-	word = words+wordsup
+	word.append(words+wordsup)
+	
+	# Convert to capital letters
+	
+	surnamecapital = surname.upper()
+	namecapital = name.upper()
+
+	
+	# initials of names processing
+	
+	surinit = surname[:1] #1 characters of last name
+	surinitup = surinit.title() 
+	nameinit = name[:1] #1 character of first name
+	nameinitup = nameinit.title()
+	
 	
 	# reverse a name
 	
@@ -363,98 +555,121 @@ elif sys.argv[1] == '-i':
 	rev_wifeup = wifeup[::-1]
 	rev_kid = kid[::-1]
 	rev_kidup = kidup[::-1]
-	
-	reverse = [rev_name, rev_nameup, rev_nick, rev_nickup, rev_wife, rev_wifeup, rev_kid, rev_kidup]
+	rev_kid2 = kid[::-1]
+	rev_kid2up = kidup[::-1]
+	reverse = [rev_name, rev_nameup, rev_nick, rev_nickup, rev_wife, rev_wifeup, rev_kid, rev_kidup, rev_kid2, rev_kid2up]
 	rev_n = [rev_name, rev_nameup, rev_nick, rev_nickup]
 	rev_w = [rev_wife, rev_wifeup]
 	rev_k = [rev_kid, rev_kidup]
+	
 	# Let's do some serious work! This will be a mess of code, but... who cares? :)
+	
+	
+	
+	
 	
 	# Birthdays combinations
 	
 	bds = [birthdate_yy, birthdate_yyy, birthdate_yyyy, birthdate_xd, birthdate_xm, birthdate_dd, birthdate_mm]
-	
+	# New version of CUPP doesnt care for strange YYYxD or xDxMYY combinations like 1991 06 15 = 1916, if you want to reactivate just add it in the line above again.
+	# Scroll up to birthday modifications to get the variable you are looking for, to add it in the bds = [] field above
 	bdss = []
+	for kombina1 in xrange(0,len(bds)+1):
+		bdss.append(list(itertools.combinations(bds,kombina1)))
+		
 	
-	for bds1 in bds:
-		bdss.append(bds1)
-		for bds2 in bds:
-			if bds.index(bds1) != bds.index(bds2):
-				bdss.append(bds1+bds2)
-				for bds3 in bds:
-					if bds.index(bds1) != bds.index(bds2) and bds.index(bds2) != bds.index(bds3) and bds.index(bds1) != bds.index(bds3):
-						bdss.append(bds1+bds2+bds3)
-	
-	
-	
-	# For a woman...
-	wbds = [wifeb_yy, wifeb_yyy, wifeb_yyyy, wifeb_xd, wifeb_xm, wifeb_dd, wifeb_mm]
-	
+	# For a woman aka partner
+	wbds = [wifeb_yy, wifeb_yyyy, wifeb_dd, wifeb_mm]
 	wbdss = []
-	
-	for wbds1 in wbds:
-		wbdss.append(wbds1)
-		for wbds2 in wbds:
-			if wbds.index(wbds1) != wbds.index(wbds2):
-				wbdss.append(wbds1+wbds2)
-				for wbds3 in wbds:
-					if wbds.index(wbds1) != wbds.index(wbds2) and wbds.index(wbds2) != wbds.index(wbds3) and wbds.index(wbds1) != wbds.index(wbds3):
-						wbdss.append(wbds1+wbds2+wbds3)
-	
+	for kombina1 in xrange(0,len(wbds)+1):
+		wbdss.append(list(itertools.combinations(wbds,kombina1)))
 	
 	
 	# and a child...
-	kbds = [kidb_yy, kidb_yyy, kidb_yyyy, kidb_xd, kidb_xm, kidb_dd, kidb_mm]
-	
+	kbds = [kidb_yy, kidb_yyyy, kidb_dd, kidb_mm]
 	kbdss = []
+	for kombina1 in xrange(0,len(kbds)+1):
+		kbdss.append(list(itertools.combinations(kbds,kombina1)))
+
+		
+	# and a 2nd child...
+	kbds2 = [kid2b_yy, kid2b_yyyy, kid2b_dd, kid2b_mm]
+	kbdss2 = []
+	for kombina1 in xrange(0,len(kbds2)+1):
+		kbdss2.append(list(itertools.combinations(kbds2,kombina1)))
+
 	
-	for kbds1 in kbds:
-		kbdss.append(kbds1)
-		for kbds2 in kbds:
-			if kbds.index(kbds1) != kbds.index(kbds2):
-				kbdss.append(kbds1+kbds2)
-				for kbds3 in kbds:
-					if kbds.index(kbds1) != kbds.index(kbds2) and kbds.index(kbds2) != kbds.index(kbds3) and kbds.index(kbds1) != kbds.index(kbds3):
-						kbdss.append(kbds1+kbds2+kbds3)
+	fambds = [birthdate_yy, birthdate_yyyy, birthdate_dd, birthdate_mm, wifeb_yy, wifeb_yyyy, wifeb_dd, wifeb_mm, kidb_yy, kidb_yyyy, kidb_dd, kidb_mm, kid2b_yy, kid2b_yyyy, kid2b_dd, kid2b_mm]
+	# in the new version of CUPP we now take some care for combinations of birthdates of the whole family 
+	# if you want to deactivate just set fambds = to []
 	
-	# string combinations....
-	
+	fambdss = []
+	for kombina1 in xrange(0,len(fambds)+1):
+		fambdss.append(list(itertools.combinations(fambds,kombina1)))
+
+		
+		
+		
+		
+	###############################
+	# LETS START THE MIXING MAGIC #
+	###############################
+		
+	# TO DO / WORK / PETS / LICENSE PLATE 
 	kombinaac = [pet, petup, company, companyup]
+	kombinaacs = []
+	for kombina1 in xrange(0,len(kombinaac)+1):
+		kombinaacs.append(list(itertools.combinations(kombinaac,kombina1)))
 	
-	kombina = [name, surname, nick, nameup, surnameup, nickup]
 	
-	kombinaw = [wife, wifen, wifeup, wifenup, surname, surnameup]
 	
-	kombinak = [kid, kidn, kidup, kidnup, surname, surnameup]
+	# BASIC COMBINATIONS FOR FURTHER MIXING 
+	# *************************************
 	
+	
+	# Basic combination of main targets basic info - dont add birthday here, will be combined later 
+	kombina = [name, nameinitup, namecapital, nickup, surinitup, nameinit, surname, nick, nameup, surnameup, surinit]
 	kombinaa = []
-	for kombina1 in kombina:
-		kombinaa.append(kombina1)
-		for kombina2 in kombina:
-			if kombina.index(kombina1) != kombina.index(kombina2) and kombina.index(kombina1.title()) != kombina.index(kombina2.title()):
-				kombinaa.append(kombina1+kombina2)
+	for kombina1 in xrange(0,len(kombina)+1):
+		kombinaa.append(list(itertools.combinations(kombina,kombina1)))
 	
+	# Basic combinations of wife / partner with modded lastname of target
+	kombinaw = [wife, wifen, wifeup, wifenup, surname, surnameup, surinit, surinitup, surnamecapital]
 	kombinaaw = []
-	for kombina1 in kombinaw:
-		kombinaaw.append(kombina1)
-		for kombina2 in kombinaw:
-			if kombinaw.index(kombina1) != kombinaw.index(kombina2) and kombinaw.index(kombina1.title()) != kombinaw.index(kombina2.title()):
-				kombinaaw.append(kombina1+kombina2)
-	
+	for kombina1 in xrange(0,len(kombinaw)+1):
+		kombinaaw.append(list(itertools.combinations(kombinaw,kombina1)))
+		
+	# Basic combinations of the kid
+	kombinak = [kid, kidn, kidup, kidnup, surname, surnameup, surnamecapital, surinit, surinitup]
 	kombinaak = []
-	for kombina1 in kombinak:
-		kombinaak.append(kombina1)
-		for kombina2 in kombinak:
-			if kombinak.index(kombina1) != kombinak.index(kombina2) and kombinak.index(kombina1.title()) != kombinak.index(kombina2.title()):
-				kombinaak.append(kombina1+kombina2)
-	
+	for kombina1 in xrange(0,len(kombinak)+1):
+		kombinaak.append(list(itertools.combinations(kombinak,kombina1)))
+		
+	# Basic combinations of the family
+	kombinaf = [name, nick, surname, surinit, nickup, surnameup, nameup, surinitup, nameinit, nameinitup, namecapital, surnamecapital, wifeup, wife, kid, kidup]
+	kombinaaf = []
+	for kombina1 in xrange(0,len(kombinaf)+1):
+		kombinaaf.append(list(itertools.combinations(kombinaf,kombina1)))
+
+	# Secure Combinations. Will be combined with special chars later.
+	kombinasec = [name, birthdate_yy, nick, nickup, nameup, wifen, wifeup, wifenup, wifeb_yy, kidn, kidnup, kidb_yy, nameinit, nameinitup, surnamecapital, surinit, surinitup, namecapital]
+	kombaasec = []
+	if securechars == "y":
+		for kombina1 in xrange(0,len(kombinasec)+1):
+			kombaasec.append(list(itertools.combinations(kombinasec,kombina1)))
+
+			
+			
+			
+	# COMBINING THE BASICS FOR FINAL RESULTS 
+	# **************************************
 	
 	
 	komb1 = list(komb(kombinaa, bdss))
 	komb2 = list(komb(kombinaaw, wbdss))
 	komb3 = list(komb(kombinaak, kbdss))
 	komb4 = list(komb(kombinaa, years))
-	komb5 = list(komb(kombinaac, years))
+	komb5 = list(komb(kombinaacs, years))
 	komb6 = list(komb(kombinaaw, years))
 	komb7 = list(komb(kombinaak, years))
 	komb8 = list(komb(word, bdss))
@@ -466,33 +681,99 @@ elif sys.argv[1] == '-i':
 	komb14 = ['']
 	komb15 = ['']
 	komb16 = ['']
+	komb17 = ['']
+	komb18 = ['']
+	komb19 = ['']
+	komb20 = ['']
 	komb21 = ['']
+	komb22 = list(komb(kombinaaf, fambdss))
+	komb23 = ['']
+	komb24 = ['']
+	komb25 = ['']
+	komb26 = ['']
+	komb27 = ['']
+	komb28 = ['']
+	if securechars == "y":
+		komb23 = list(komb(fambds, kombaasec))
+		komb24 = list(komb(kombaasec, fambds))
+		komb25 = list(komb(fambds, komb24))
 	if randnum == "y":
 		komb12 = list(concats(word, numfrom, numto))
 		komb13 = list(concats(kombinaa, numfrom, numto))
-		komb14 = list(concats(kombinaac, numfrom, numto))
+		komb14 = list(concats(kombinaacs, numfrom, numto))
 		komb15 = list(concats(kombinaaw, numfrom, numto))
 		komb16 = list(concats(kombinaak, numfrom, numto))
+		komb26 = list(concats(kombaasec, numfrom, numto))
+		komb27 = list(concats(kombinaaf, numfrom, numto))
+	if askreverse == "y":
 		komb21 = list(concats(reverse, numfrom, numto))
-	komb17 = list(komb(reverse, years))
-	komb18 = list(komb(rev_w, wbdss))
-	komb19 = list(komb(rev_k, kbdss))
-	komb20 = list(komb(rev_n, bdss))
+		komb17 = list(komb(reverse, years))
+		komb18 = list(komb(rev_w, wbdss))
+		komb19 = list(komb(rev_k, kbdss))
+		komb20 = list(komb(rev_n, bdss))
 	komb001 = ['']
 	komb002 = ['']
 	komb003 = ['']
 	komb004 = ['']
 	komb005 = ['']
 	komb006 = ['']
+	komb007 = ['']
+	komb008 = ['']
+	komb009 = ['']
+	komb010 = ['']
+	komb011 = ['']
+	komb012 = ['']
+	komb013 = ['']
+	komb014 = ['']
+	komb015 = ['']
+	komb016 = ['']
+	komb017 = ['']
+	komb018 = ['']
+	komb019 = ['']
+	komb020 = ['']
+	komb021 = ['']
+	komb022 = ['']
+	komb023 = ['']
+	komb024 = ['']
+	komb025 = ['']
+	komb026 = ['']
+	komb027 = ['']
+	komb028 = ['']
+	komb029 = ['']
+	komb030 = ['']
+	komb031 = ['']
+	
 	if spechars1 == "y":
 		komb001 = list(komb(kombinaa, spechars))
-		komb002 = list(komb(kombinaac, spechars))
+		komb002 = list(komb(kombinaacs, spechars))
 		komb003 = list(komb(kombinaaw , spechars))
 		komb004 = list(komb(kombinaak , spechars))
 		komb005 = list(komb(word, spechars))
-		komb006 = list(komb(reverse, spechars))
-	
-	print "[+] Sorting list and removing duplicates..."
+		if askreverse == "y":
+			komb006 = list(komb(reverse, spechars))
+		komb007 = list(komb(kombinaaf, spechars))
+		komb022 = list(komb(kombaasec, spechars))
+		
+	if specharsF1 == "y":
+		komb008 = list(komb(specharsF, kombinaa))
+		komb009 = list(komb(specharsF, kombinaacs))
+		komb010 = list(komb(specharsF, kombinaaw))
+		komb011 = list(komb(specharsF, kombinaak))
+		komb012 = list(komb(specharsF, word))
+		if askreverse == "y":
+			komb013 = list(komb(specharsF, reverse))
+		komb014 = list(komb(specharsF, kombinaaf))
+		komb023 = list(komb(specharsF, kombaasec))
+	if spechars2 == "y":
+		komb015 = list(komb(komb008, spechars))
+		komb016 = list(komb(komb009, spechars))
+		komb017 = list(komb(komb010, spechars))
+		komb018 = list(komb(komb011, spechars))
+		komb019 = list(komb(komb012, spechars))
+		if askreverse == "y":
+			komb020 = list(komb(komb013, spechars))
+		komb021 = list(komb(komb014, spechars))
+		komb024 = list(komb(komb022, spechars))
 	
 	komb_unique1 = dict.fromkeys(komb1).keys()
 	komb_unique2 = dict.fromkeys(komb2).keys()
@@ -515,8 +796,14 @@ elif sys.argv[1] == '-i':
 	komb_unique19 = dict.fromkeys(komb19).keys()
 	komb_unique20 = dict.fromkeys(komb20).keys()
 	komb_unique21 = dict.fromkeys(komb21).keys()
+	komb_unique22 = dict.fromkeys(komb22).keys()
+	komb_unique23 = dict.fromkeys(komb23).keys()
+	komb_unique24 = dict.fromkeys(komb24).keys()
+	komb_unique25 = dict.fromkeys(komb25).keys()
+	komb_unique26 = dict.fromkeys(komb26).keys()
+	komb_unique27 = dict.fromkeys(komb27).keys()
 	komb_unique01 = dict.fromkeys(kombinaa).keys()
-	komb_unique02 = dict.fromkeys(kombinaac).keys()
+	komb_unique02 = dict.fromkeys(kombinaacs).keys()
 	komb_unique03 = dict.fromkeys(kombinaaw).keys()
 	komb_unique04 = dict.fromkeys(kombinaak).keys()
 	komb_unique05 = dict.fromkeys(word).keys()
@@ -526,8 +813,40 @@ elif sys.argv[1] == '-i':
 	komb_unique010 = dict.fromkeys(komb004).keys()
 	komb_unique011 = dict.fromkeys(komb005).keys()
 	komb_unique012 = dict.fromkeys(komb006).keys()
+	komb_unique013 = dict.fromkeys(komb007).keys()
+	komb_unique014 = dict.fromkeys(komb008).keys()
+	komb_unique015 = dict.fromkeys(komb009).keys()
+	komb_unique016 = dict.fromkeys(komb010).keys()
+	komb_unique017 = dict.fromkeys(komb011).keys()
+	komb_unique018 = dict.fromkeys(komb012).keys()
+	komb_unique019 = dict.fromkeys(komb013).keys()
+	komb_unique020 = dict.fromkeys(komb014).keys()
+	komb_unique021 = dict.fromkeys(komb015).keys()
+	komb_unique022 = dict.fromkeys(komb016).keys()
+	komb_unique023 = dict.fromkeys(komb017).keys()
+	komb_unique024 = dict.fromkeys(komb018).keys()
+	komb_unique025 = dict.fromkeys(komb019).keys()
+	komb_unique026 = dict.fromkeys(komb020).keys()
+	komb_unique027 = dict.fromkeys(komb021).keys()
+	komb_unique028 = dict.fromkeys(komb022).keys()
+	komb_unique029 = dict.fromkeys(komb023).keys()
+	komb_unique030 = dict.fromkeys(komb024).keys()
 	
-	uniqlist = bdss+wbdss+kbdss+reverse+komb_unique01+komb_unique02+komb_unique03+komb_unique04+komb_unique05+komb_unique1+komb_unique2+komb_unique3+komb_unique4+komb_unique5+komb_unique6+komb_unique7+komb_unique8+komb_unique9+komb_unique10+komb_unique11+komb_unique12+komb_unique13+komb_unique14+komb_unique15+komb_unique16+komb_unique17+komb_unique18+komb_unique19+komb_unique20+komb_unique21+komb_unique07+komb_unique08+komb_unique09+komb_unique010+komb_unique011+komb_unique012
+	
+	#################################
+	# PREPARING THE LIST FOR OUTPUT #
+	#################################
+	
+	uniqlist = bdss+wbdss+kbdss+komb_unique01+komb_unique02+komb_unique03+komb_unique04+komb_unique05+komb_unique1+komb_unique2+komb_unique3+komb_unique4+komb_unique5+komb_unique6+komb_unique7+komb_unique8+komb_unique9+komb_unique10+komb_unique11+komb_unique12+komb_unique13+komb_unique14+komb_unique15+komb_unique16+komb_unique17+komb_unique18+komb_unique19+komb_unique20+komb_unique21+komb_unique021+komb_unique022+komb_unique023+komb_unique024+komb_unique025+komb_unique026+komb_unique027+komb_unique22+komb_unique23+komb_unique24+komb_unique25+komb_unique26+komb_unique27
+	if askreverse == "y": # check if reverse names was selected
+		uniqlist = uniqlist+reverse
+	if specharswasno <> "y": # check if special chars was selected
+		uniqlist = uniqlist+komb_unique07+komb_unique08+komb_unique09+komb_unique010+komb_unique011+komb_unique012+komb_unique013
+	if specharsF1wasno <> "y": # check if special chars in front was selected
+		uniqlist = uniqlist+komb_unique014+komb_unique015+komb_unique016+komb_unique017+komb_unique018+komb_unique019+komb_unique020
+
+	
+	# Do we want to leet ?
 	
 	unique_lista = dict.fromkeys(uniqlist).keys()
 	unique_leet = []
@@ -542,7 +861,7 @@ elif sys.argv[1] == '-i':
 			x = x.replace('g',g)
 			x = x.replace('z',z)
 			unique_leet.append(x)
-	
+	print "[+] Sorting and preparing output"
 	unique_list = unique_lista + unique_leet
 	
 	unique_list_finished = []
@@ -550,17 +869,33 @@ elif sys.argv[1] == '-i':
 		if len(x) > wcfrom and len(x) < wcto:
 			unique_list_finished.append(x)
 
+	lines0 = 0
+	lines1 = 0
+	for lines in unique_list:
+		lines0 += 1
+	for lines2 in unique_list_finished:
+		lines1 += 1
+		
+	print "\r\n"	
+	print "Your output will have "+str(lines0)+" entries."
+	print "The feel-lucky-filter will remove similar entries and print "+str(lines1)+" lines."
+	lucky = raw_input("> Do you feel lucky and use the filter? Y/[N]: ").lower()
+	print "\r\n"
+	
 	unique_list_finished.sort()
 	f = open ( name+'.txt', 'w' )
-	f.write (os.linesep.join(unique_list_finished))
+	if lucky == "y":
+		f.write (os.linesep.join(unique_list_finished)) # --- THIS IS SHORTENING AND FILTERING TOO MUCH COMBINATIONS !!! 
+	if lucky <> "y":
+		f.write (os.linesep.join(unique_list))
 	f = open ( name+'.txt', 'r' )
 	lines = 0
 	for line in f:
 		lines += 1
 	f.close()
 	
-	print "[+] Saving dictionary to \033[1;31m"+name+".txt\033[1;m, counting \033[1;31m"+str(lines)+"\033[1;m words."
-	print "[+] Now load your pistolero with \033[1;31m"+name+".txt\033[1;m and shoot! Good luck!"
+	print "[+] Saving dictionary to "+name+".txt, counting "+str(lines)+" words."
+	print "[+] Now load your pistolero with "+name+".txt and shoot! Good luck!"
 	exit()
 
 	
